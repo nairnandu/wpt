@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<head>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <script src="/common/subset-tests.js"></script>
+
+  <meta name="variant" content="?1-1">
+  <meta name="variant" content="?2-2">
+  <meta name="variant" content="?3-3">
+
+  <meta name="referrer" content="no-referrer" id="referrermeta">
+</head>
+<body>
+  <script>
+    async function fetchAndGetReferrer() {
+      let response = await fetch('/common/security-features/subresource/xhr.py');
+      let data = await response.json();
+      return data.headers.referer;
+    }
+
+    subsetTest(promise_test, async t => {
+      assert_equals(await fetchAndGetReferrer(),
+                    undefined,
+                    'referrer should not be set');
+      document.getElementById('referrermeta').remove();
+      assert_equals(await fetchAndGetReferrer(),
+                    window.location.href,
+                    'referrer should be set');
+    }, 'test removing <meta name="referrer">');
+
+    subsetTest(promise_test, async t => {
+      assert_equals(await fetchAndGetReferrer(),
+                    undefined,
+                    'referrer should not be set');
+
+      // Add second meta tag.
+      const second_meta = document.createElement('meta');
+      second_meta.name = 'referrer';
+      second_meta.content = 'strict-origin';
+      document.head.appendChild(second_meta);
+
+      // Second meta should override the first.
+      assert_equals(await fetchAndGetReferrer(),
+                    location.origin + '/',
+                    'referrer should be origin only');
+
+      // Removing second meta should revert the referrer policy to first meta's
+      // value.
+      second_meta.remove();
+      assert_equals(await fetchAndGetReferrer(),
+                    undefined,
+                    'referrer should not be set');
+    }, 'test adding and removing a second <meta name="referrer">');
+
+    subsetTest(promise_test, async t => {
+      assert_equals(await fetchAndGetReferrer(),
+                    undefined,
+                    'referrer should not be set');
+
+      // Add second meta _before_ first meta.
+      const first_meta = document.getElementById('referrermeta');
+      const second_meta = document.createElement('meta');
+      second_meta.name = 'referrer';
+      second_meta.content = 'strict-origin';
+      document.head.insertBefore(second_meta, first_meta);
+
+      // The new meta tag was inserted before the old one, so the old one's
+      // referrer policy should be used.
+      assert_equals(await fetchAndGetReferrer(),
+                    undefined,
+                    'referrer should not be set');
+    }, 'test document referrer policy is the value of the last <meta name="referrer"> in tree order');
+  </script>
+</body>
