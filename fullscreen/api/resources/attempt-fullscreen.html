@@ -1,23 +1,46 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <title>IFrame Fullscreen API success reporter</title>
 <body>
-<script>
-reportFullscreenSuccessful = (success) => {
-  return () => {
-    parent.postMessage({"report": {
-      "api": "fullscreen",
-      "result": success,
-      "frame": window.name
-    }}, "*");
-  };
-};
+    <script>
+        reportResult = (success) => {
+            parent.postMessage(
+                {
+                    report: {
+                        api: "fullscreen",
+                        result: success,
+                        frame: window.name,
+                    },
+                },
+                "*"
+            );
+        };
 
-window.addEventListener('message', e => {
-  if (e.data.action == "report") {
-    document.onfullscreenchange = reportFullscreenSuccessful(true);
-    document.onfullscreenerror = reportFullscreenSuccessful(false);
-    document.body.requestFullscreen();
-  }
-});
-</script>
+        window.addEventListener("message", async (e) => {
+            if (e.data.action == "report") {
+                let success = false;
+                const errorPromise = new Promise((resolve) => {
+                    window.addEventListener("fullscreenerror", (e) => {
+                        resolve(e);
+                    });
+                });
+                try {
+                    const changePromise = new Promise((resolve) => {
+                        document.addEventListener("fullscreenchange", resolve, {
+                            once: true,
+                        });
+                    });
+                    await Promise.all([
+                        document.body.requestFullscreen(),
+                        changePromise,
+                    ]);
+                } catch (e) {
+                    await errorPromise;
+                    success = false;
+                } finally {
+                    reportResult(success);
+                }
+            }
+        });
+    </script>
+</body>
