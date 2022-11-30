@@ -49,7 +49,7 @@ test(() => {
   observer.disconnect();
 }, 'PressureObserver.disconnect() on detached frame returns');
 
-promise_test(t => {
+promise_test(async t => {
   const iframe = document.createElement('iframe');
   document.body.appendChild(iframe);
   const frame_window = iframe.contentWindow;
@@ -57,7 +57,7 @@ promise_test(t => {
     assert_unreached('The observer callback should not be called');
   }, {sampleRate: 1});
 
-  observer.observe('cpu');
+  await observer.observe('cpu');
 
   iframe.remove();
 
