@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<link rel=author href="mailto:jarhar@chromium.org">
+<link rel=help href="https://chromium-review.googlesource.com/c/chromium/src/+/4021969">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<div id=popover1 popover>
+  <dialog id=childdialog autofocus>
+    <button autofocus>hello world</button>
+  </dialog>
+</div>
+
+<div id=popover2 popover=manual>
+  <div id=childpopover popover=manual autofocus>
+    <button autofocus>hello world</button>
+  </div>
+</div>
+
+<script>
+test(t => {
+  t.add_cleanup(() => childdialog.close());
+  t.add_cleanup(() => popover1.hidePopover());
+  popover1.addEventListener('popovershow', () => {
+    childdialog.showModal();
+  });
+  popover1.showPopover();
+
+  const openElements = document.querySelectorAll(':open');
+  assert_equals(openElements.length, 1, 'There should be an open popover matching :open.');
+  assert_equals(openElements[0], popover1, 'The popover should be open.');
+  assert_true(childdialog.hasAttribute('open'), 'The dialog should be open.');
+  assert_equals(document.activeElement, document.body, 'Nothing should have gotten focused.');
+}, 'Popovers should not initially focus child dialog elements.');
+
+test(t => {
+  t.add_cleanup(() => childpopover.hidePopover());
+  t.add_cleanup(() => popover2.hidePopover());
+  popover2.addEventListener('popovershow', () => {
+    childpopover.showPopover();
+  });
+  popover2.showPopover();
+
+  const openElements = document.querySelectorAll(':open');
+  assert_equals(openElements.length, 2, 'Both of the popovers should be open and matching :open.');
+  assert_equals(openElements[0], popover2, 'The parent popover should be open.');
+  assert_equals(openElements[1], childpopover, 'The child popover should be open.');
+  assert_equals(document.activeElement, document.body);
+}, 'Popovers should not initially focus child popover elements.');
+</script>
