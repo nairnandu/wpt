@@ -64,7 +64,7 @@ const load_and_observe = url => {
           resolve(entryList.getEntries()[0]);
         }
       }
-    })).observe({type: 'largest-contentful-paint', buffered: true});
+    })).observe({ type: 'largest-contentful-paint', buffered: true });
     const img = new Image();
     img.id = 'image_id';
     img.src = url;
@@ -80,7 +80,7 @@ const load_video_and_observe = url => {
           resolve(entryList.getEntries()[0]);
         }
       }
-    })).observe({type: 'largest-contentful-paint', buffered: true});
+    })).observe({ type: 'largest-contentful-paint', buffered: true });
     const video = document.createElement("video");
     video.id = 'video_id';
     video.src = url;
@@ -90,3 +90,53 @@ const load_video_and_observe = url => {
     document.body.appendChild(video);
   });
 };
+
+const getLCPStartTime = (identifier) => {
+  return new Promise(resolve => {
+    new PerformanceObserver((entryList, observer) => {
+      entryList.getEntries().forEach(e => {
+        if (e.url.includes(identifier)) {
+          resolve(e);
+          observer.disconnect();
+        }
+      });
+    }).observe({ type: 'largest-contentful-paint', buffered: true });
+  });
+}
+
+const getFCPStartTime = () => {
+  return performance.getEntriesByName('first-contentful-paint')[0];
+}
+
+const add_text = (text) => {
+  const paragraph = document.createElement('p');
+  paragraph.innerHTML = text;
+  document.body.appendChild(paragraph);
+}
+
+const loadImage = (url, isDetached = false) => {
+  return new Promise(function (resolve, reject) {
+    let image = document.createElement('img');
+    image.addEventListener('load', () => { resolve(image); });
+    image.addEventListener('error', reject);
+    image.src = url;
+    if (isDetached)
+      image.style.opacity = 0;
+    document.body.appendChild(image);
+  });
+}
+
+const checkLCPStartTime = (lcp, fcp) => {
+  if (lcp.loadTime <= fcp.startTime) {
+    assert_approx_equals(lcp.startTime, fcp.startTime, 0.001,
+      'LCP start time should be the same as FCP for ' + lcp.url.split('/')[-1]) +
+      ' when LCP load time is less than FCP.';
+  } else {
+    assert_approx_equals(lcp.startTime, lcp.loadTime, 0.001,
+      'LCP start time should be the same as LCP load time for ' + lcp.url.split('/')[-1]) +
+      ' when LCP load time is no less than FCP.';
+  }
+
+  assert_equals(lcp.renderTime, 0,
+    'The LCP render time of Non-Tao image should always be 0 for 1st image.');
+}

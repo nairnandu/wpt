@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<meta charset=utf-8>
+<title>Non-Tao Image Load Before LCP and Render at the Same Time of FCP.
+</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="resources/largest-contentful-paint-helpers.js"></script>
+
+<body>
+  <script>
+    promise_test(async t => {
+      await loadImage(
+        '{{location[scheme]}}://{{hosts[alt][www]}}:{{ports[http][0]}}/images/blue.png');
+
+      lcp = await getLCPStartTime('blue.png');
+
+      fcp = getFCPStartTime();
+
+      checkLCPStartTime(lcp, lcp);
+    }, 'Non-Tao Image Load Before LCP and Render at the Same Time of FCP.')
+  </script>
+  <!-- <img src='{{location[scheme]}}://{{hosts[alt][www]}}:{{ports[http][0]}}/images/blue.png'> -->
+</body>
