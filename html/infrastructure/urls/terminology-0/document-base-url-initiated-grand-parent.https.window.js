@@ -37,9 +37,19 @@ const testBaseUriAboutBlankFromGrandParent = (description, child_origin) => {
 
     // The grandchild baseURI must correspond to its grand parent.
     //
+    // Note: This test requires grandchild ans self to be assigned to the same
+    // agent cluster. With site isolation, this is not guaranteed. Thus we check
+    // seperately whether we can even access the grandchild. As a side effect,
+    // this also yields stable error messages.
+    //
     // Note: `child_token` is removed, to get a stable failure, in case the
     // about:blank's document.baseURI reports the parent's URL instead of its
     // grand-parent.
+    try {
+      grandchild.document.baseURI;
+    } catch (error) {
+      assert_unreached("Cannot access grandchild.document.");
+    }
     assert_equals(
         grandchild.document.baseURI.replace(child_token, "child_token"),
         self.document.baseURI);
