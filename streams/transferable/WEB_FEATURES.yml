@@ -1,11 +1,3 @@
 features:
 - name: transferable-streams
-  files:
-  - readable-stream.html
-  - reason.html
-  - service-worker.https.html
-  - shared-worker.html
-  - transform-stream.html
-  - window.html
-  - worker.html
-  - writable-stream.html
+  files: "**"
