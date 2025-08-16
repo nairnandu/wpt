@@ -1468,10 +1468,9 @@ const dequantizeLinearTests = [
 ];
 
 if (navigator.ml) {
-  dequantizeLinearTests.forEach((test) => {
+  dequantizeLinearTests.filter(isTargetTest).forEach((test) => {
     webnn_conformance_test(
-        buildAndExecuteGraph, getDequantizeLinearPrecisionTolerance, test,
-        /*cast_to_supported_type=*/true);
+        buildAndExecuteGraph, getDequantizeLinearPrecisionTolerance, test);
   });
 } else {
   test(() => assert_implements(navigator.ml, 'missing navigator.ml'));
